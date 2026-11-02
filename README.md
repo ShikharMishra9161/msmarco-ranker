@@ -22,18 +22,27 @@ The data script streams Hugging Face `microsoft/ms_marco` (`v1.1`, the current n
 
 ## Run on Colab
 
+You can run the entire pipeline directly in Google Colab using `notebooks/colab_run.ipynb`:
+1. Open Google Colab and upload `notebooks/colab_run.ipynb`.
+2. Change the runtime accelerator to **T4 GPU** (**Runtime → Change runtime type → T4 GPU**).
+3. Upload `msmarco-ranker-colab.zip` when prompted in Step 2.
+4. Run all cells sequentially.
+
+Alternatively, execute via CLI:
+
 ```bash
 git clone <your-repository-url> && cd msmarco-ranker
 pip install -r requirements.txt
+pytest -v
 python scripts/prepare_data.py --config configs/default.yaml
-pytest -q
 python scripts/run_bm25.py --config configs/default.yaml
 python scripts/run_dense.py --config configs/default.yaml
 python scripts/run_reranker.py --config configs/default.yaml
 python scripts/generate_report.py
 ```
 
-Set Colab's runtime accelerator to T4 GPU before dense encoding and reranking. All sizes, paths, models, seeds, retrieval settings, and training settings live in `configs/default.yaml`. The default 500K training sample is intentionally sizeable; reduce `data.train_pairs` while debugging.
+Set Colab's runtime accelerator to T4 GPU before dense encoding and reranking. All sizes, paths, models, seeds, retrieval settings, and training settings live in `configs/default.yaml`. For a fast 2-minute smoke test, use `configs/debug.yaml`.
+
 
 ## Results and ablations
 
