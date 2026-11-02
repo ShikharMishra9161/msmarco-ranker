@@ -1,0 +1,35 @@
+seed: 42
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  artifacts_dir: artifacts
+  reports_dir: reports
+data:
+  dataset_name: microsoft/ms_marco
+  dataset_config: v1.1
+  train_pairs: 2000
+  dev_queries: 100
+  min_passage_tokens: 5
+  language: en
+  duplicate_jaccard_threshold: 0.92
+  max_passages_per_query: 10
+bm25:
+  k1: 1.5
+  b: 0.75
+  top_k: 50
+dense:
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  batch_size: 128
+  top_k: 50
+  ivf_nlist: 32
+  ivf_nprobe: 8
+hybrid:
+  rrf_k: 60
+reranker:
+  model_name: cross-encoder/ms-marco-MiniLM-L-6-v2
+  batch_size: 16
+  epochs: 1
+  learning_rate: 2.0e-5
+  max_length: 256
+  hard_negative_count: 4
+  rerank_depths: [20, 50]
