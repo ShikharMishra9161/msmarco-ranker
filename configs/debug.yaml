@@ -9,6 +9,7 @@ data:
   dataset_config: v1.1
   train_pairs: 2000
   dev_queries: 100
+  max_scan_multiplier: 3
   min_passage_tokens: 5
   language: en
   duplicate_jaccard_threshold: 0.92
@@ -33,3 +34,4 @@ reranker:
   max_length: 256
   hard_negative_count: 4
   rerank_depths: [20, 50]
+

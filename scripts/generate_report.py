@@ -14,6 +14,8 @@ def main() -> None:
         target.write_text("# Results\n\nNo experiments have been run yet; no metrics are reported.\n", encoding="utf-8")
         return
     frame = pd.read_csv(source)
+    if "experiment" in frame:
+        frame = frame.drop_duplicates(subset=["experiment"], keep="last")
     metric_cols = ["ndcg_at_10", "mrr_at_10", "recall_at_100"]
     latency_cols = ["latency_p50_ms", "latency_p99_ms"]
     for col in metric_cols:

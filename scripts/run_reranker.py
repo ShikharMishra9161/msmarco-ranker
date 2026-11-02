@@ -54,6 +54,11 @@ def main() -> None:
     train_bm25 = None
 
     for label, mode in variants:
+        target_files = [paths["artifacts_dir"] / f"rankings_{label}_depth_{d}.csv" for d in config["reranker"]["rerank_depths"]]
+        if all(f.exists() for f in target_files):
+            print(f"\n=== Variant {label} already evaluated, skipping... ===")
+            continue
+
         print(f"\n=== Running Reranker Variant: {label} (mode={mode}) ===")
         if mode is None:
             model = CrossEncoder(config["reranker"]["model_name"], max_length=config["reranker"]["max_length"])

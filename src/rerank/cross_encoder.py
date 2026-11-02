@@ -38,7 +38,11 @@ def fine_tune(model_name: str, examples: Sequence[InputExample], batch_size: int
     loader = DataLoader(examples, shuffle=True, batch_size=batch_size)
     model.fit(train_dataloader=loader, epochs=epochs, optimizer_params={"lr": learning_rate}, output_path=output_dir,
               show_progress_bar=True)
-    return CrossEncoder(output_dir, max_length=256)
+    try:
+        model.save(output_dir)
+    except Exception:
+        pass
+    return model
 
 
 def rerank(model: CrossEncoder, query: str, candidate_ids: Sequence[str], passage_text: dict[str, str], depth: int) -> list[str]:
