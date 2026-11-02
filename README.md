@@ -31,7 +31,7 @@ You can run the entire pipeline directly in Google Colab using `notebooks/colab_
 Alternatively, execute via CLI:
 
 ```bash
-git clone <your-repository-url> && cd msmarco-ranker
+git clone https://github.com/ShikharMishra9161/msmarco-ranker && cd msmarco-ranker
 pip install -r requirements.txt
 pytest -v
 python scripts/prepare_data.py --config configs/default.yaml
@@ -46,6 +46,29 @@ Set Colab's runtime accelerator to T4 GPU before dense encoding and reranking. A
 
 ## Results and ablations
 
-Every completed run appends its full YAML config plus NDCG@10, MRR@10, Recall@100, and p50/p99 per-query latency to `reports/results.csv`. Run `scripts/generate_report.py` to render the current table in [reports/results.md](reports/results.md). Until experiments execute, metrics are intentionally absent.
+Every completed run appends its full YAML config plus NDCG@10, MRR@10, Recall@100, and p50/p99 per-query latency to `reports/results.csv`. Run `scripts/generate_report.py` to render the current table in [reports/results.md](reports/results.md).
 
-Reranker ablations cover no fine-tuning, random negatives, BM25 hard negatives, and rerank depths 20/50/100. Use `scripts/worst_queries.py --rankings <file.csv>` after exporting rankings to print the 20 lowest-NDCG queries for error analysis.
+Current results (Colab T4; 95 dev queries over a cleaned corpus of 2,459 passages, ~200 training queries, retrieval depth 50):
+
+| Stage | NDCG@10 | MRR@10 | p50 latency (ms) | p99 latency (ms) |
+|:--|--:|--:|--:|--:|
+| BM25 | 0.5113 | 0.4160 | 2.3 | 5.2 |
+| Dense (MiniLM, FAISS FlatIP) | 0.6258 | 0.5153 | 9.2 | 15.3 |
+| Dense (MiniLM, FAISS IVF-Flat) | 0.6270 | 0.5167 | 9.0 | 11.4 |
+| Hybrid BM25 + dense IVF (RRF) | 0.6117 | 0.5151 | 9.0 | 11.4 |
+| Cross-encoder rerank, depth 20 | 0.7291 | 0.6568 | 355 | 547 |
+| **Cross-encoder rerank, depth 50** | **0.7370** | **0.6608** | 803 | 1,027 |
+| + fine-tuned, random negatives (depth 50) | 0.7369 | 0.6608 | 911 | 1,419 |
+| + fine-tuned, BM25 hard negatives (depth 50) | 0.7357 | 0.6591 | 1,193 | 1,519 |
+
+Findings:
+
+- Dense retrieval beats BM25 by 22.6% NDCG@10. IVF-Flat matches exact search quality with 25% lower p99 latency.
+- Cross-encoder reranking gives the largest gain: +44.1% NDCG@10 over BM25. Going from depth 20 to 50 adds only +0.008 NDCG at 2.3x the p50 latency.
+- RRF fusion scores below dense-only retrieval here; BM25 adds more noise than complementary signal on this subset.
+- Fine-tuning the already MS MARCO-trained cross-encoder on ~200 queries does not help, with either random or hard negatives. A larger training set is the next experiment.
+- Recall@100 is 1.0 for dense and reranked runs only because the evaluation corpus is small, so it is not a meaningful metric at this scale.
+
+Data cleaning on this run removed 5 exact duplicates, 21 MinHash near duplicates and 5 dev queries left without a relevant passage; see [reports/data_quality.md](reports/data_quality.md).
+
+Reranker ablations cover no fine-tuning, random negatives, BM25 hard negatives, and rerank depths 20/50 (100 is configurable). Use `scripts/worst_queries.py --rankings <file.csv>` after exporting rankings to print the 20 lowest-NDCG queries for error analysis.
